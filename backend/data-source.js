@@ -1,7 +1,7 @@
 require("reflect-metadata"); // חובה ל-TypeORM (metadata)
 
 const { DataSource } = require("typeorm"); // כלי לחיבור וניהול DB
-const Task = require("../backend/task.entity"); // ה-Entity (הטבלה)
+const Task = require("./task.entity"); // ה-Entity (הטבלה)
 
 module.exports = new DataSource({ // יצירת וייצוא חיבור ל-DB
     type: "postgres",        // סוג בסיס נתונים
@@ -12,5 +12,5 @@ module.exports = new DataSource({ // יצירת וייצוא חיבור ל-DB
     synchronize: false,      // לא משנה טבלאות אוטומטית
     logging: false,          // לא מדפיס שאילתות לטרמינל
     entities: [Task],        // רשימת הטבלאות (Entities)
-    migrations: ["./migrations/*.js"], // קבצי שינוי DB
+    migrations: ["src/migrations/*.js"], // קבצי שינוי DB
 });

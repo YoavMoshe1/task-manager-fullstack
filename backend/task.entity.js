@@ -12,6 +12,11 @@ module.exports = new EntitySchema({ // הגדרת טבלה חדשה
         title: {
             type: "varchar",    // טקסט
         },
+        description: {
+            type: "varchar",
+            nullable: true, // שלא יפיל לך שורות קיימות
+            default: "NOTHING",
+        },
         completed: {
             type: "boolean",    // true/false
             default: false,     // ברירת מחדל
