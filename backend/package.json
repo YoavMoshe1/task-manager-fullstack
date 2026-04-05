@@ -1,0 +1,21 @@
+{
+  "name": "goodluck",
+  "version": "1.0.0",
+  "description": "",
+  "main": "delete.js",
+  "scripts": {
+    "start": "node server.js",
+    "typeorm": "node ./node_modules/typeorm/cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.28"
+  }
+}
