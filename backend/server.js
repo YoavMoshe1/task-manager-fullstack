@@ -42,6 +42,7 @@ AppDataSource.initialize().then(() => {
             const newTask = taskRepo.create({ // יוצר אובייקט חדש (לא שומר עדיין)
                 title: req.body.title,
                 priority: req.body.priority,
+                description: req.body.description,
             });
     
             await taskRepo.save(newTask); // שומר ב-DB
@@ -77,7 +78,9 @@ AppDataSource.initialize().then(() => {
             if (req.body.title !== undefined) updateData.title = req.body.title; // מוסיף רק אם קיים
             if (req.body.priority !== undefined) updateData.priority = req.body.priority; // מוסיף רק אם קיים
             if (req.body.completed !== undefined) updateData.completed = req.body.completed;
+            if (req.body.description !== undefined) updateData.description = req.body.description;
             const result = await taskRepo.update(req.params.id, updateData); // משתמש באובייקט החדש ומעדכן את ה db 
+
     
             if (result.affected === 0) {
                 return res.status(404).json({ message: "Task not found" });
