@@ -1,224 +1,108 @@
-import { useState, useEffect} from "react";
+import { useState } from "react";
 import "./App.css";
 
-type Task = {
-  id: number;
-  title: string;
-  completed: boolean;
-};
+// UI Components
+import TaskList from "./components/TaskList";
+import TopBar from "./components/TopBar";
+import AddModal from "./components/modals/AddModal";
+import EditModal from "./components/modals/EditModal";
+import DeleteModal from "./components/modals/DeleteModal";
+import PageHeader from "./components/PageHeader";
+
+// Custom Hooks (logic separation)
+import { useTasks } from "./hooks/useTasks";
+import { useFilteredTasks } from "./hooks/useFilteredTasks";
+import { useModals } from "./hooks/useModals";
+
+// Constants (centralized UI text)
+import { LOADING } from "./constants/texts";
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([]); 
-  const [isLoading, setIsLoading] = useState(true);
-  const [newTask, setNewTask] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState("");
+  // Main data and actions (CRUD + loading state)
+  const {
+    tasks,
+    isLoading,
+    toggleTask,
+    addTask,
+    deleteTask,
+    updateTask,
+  } = useTasks();
+
+  // Modal state management (Add + Edit + Delete)
+  const {
+    isAddOpen,
+    selectedTask,
+    deleteTaskId,
+    openAdd,
+    closeAdd,
+    openEdit,
+    closeEdit,
+    openDelete,
+    closeDelete,
+  } = useModals();
+
+  // Controlled input for search
   const [search, setSearch] = useState("");
 
-  // פונקציה שמשנה את הסטייט
-  const toggleTask = (id: number) => {
-    const updatedTasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
-    setTasks(updatedTasks); // מעדכן את ה־state
-  };
-
-  const addTask = async () => {
-    if (!newTask.trim()) return;
-  
-    try {
-      const res = await fetch("http://localhost:3000/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title: newTask }),
-      });
-  
-      const data = await res.json();
-  
-      setTasks(prev => [...prev, data]); // מוסיף לרשימה
-      setNewTask(""); // מנקה את השדה
-    } catch (error) {
-      console.error("Error adding task:", error);
-    }
-  };
-
-  const deleteTask = async (id: number) => {
-    try {
-      await fetch(`http://localhost:3000/tasks/${id}`, {
-        method: "DELETE",
-      });
-  
-      // מעדכן את ה־state (מוחק מהמסך)
-      setTasks(prev => prev.filter(task => task.id !== id));
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
-  };
-
-  const updateTaskTitle = async (id: number, newTitle: string) => {
-    if (!newTitle.trim()) return;
-  
-    try {
-      await fetch(`http://localhost:3000/tasks/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title: newTitle }),
-      });
-  
-      // עדכון ה־UI
-      setTasks(prev =>
-        prev.map(task =>
-          task.id === id ? { ...task, title: newTitle } : task
-        )
-      );
-    } catch (error) {
-      console.error("Error updating task:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setIsLoading(true);
-  
-          const res = await fetch("http://localhost:3000/tasks");
-          const data = await res.json();
-  
-        setTasks(data);
-      } catch (error) {
-          console.error("Error fetching tasks:", error);
-      } finally {
-          setTimeout(() => setIsLoading(false), 500);
-      }
-    };
-  
-    fetchTasks();
-  }, []);
-
+  // Apply filtering logic via custom hook
+  const filteredTasks = useFilteredTasks(tasks, search);
 
   return (
     <div className="container">
-      {/* Title */}
-      <h1 className="title">
-        Task Command Center
-      </h1>
-  
-      {/* 🔥 Top Bar */}
-      <div className="top-bar">
-  
-        {/* צד שמאל - Add */}
-        <div className="left">
-          <input
-            type="text"
-            placeholder="Add new task..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newTask.trim()) addTask();
-            }}
-            className="input"
-          />
-  
-          <button onClick={addTask} className="button">
-            Add
-          </button>
-        </div>
-  
-        {/* צד ימין - Search */}
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input search-input"
-        />
-  
-      </div>
-  
-      {/* 🔄 Loading */}
+
+      {/* Page title component */}
+      <PageHeader />
+
+      {/* Top controls: Add button + Search input */}
+      <TopBar
+        onAddClick={openAdd}
+        search={search}
+        setSearch={setSearch}
+      />
+
+      {/* Conditional rendering: loading vs task list */}
       {isLoading ? (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
-          <h2>Loading...</h2>
-        </div>
+        <h2>{LOADING}</h2>
       ) : (
-  
-        <div className="task-grid">
-          {tasks
-            .filter(task =>
-              task.title.toLowerCase().includes(search.toLowerCase())
-            )
-            .map(task => (
-              <div
-                key={task.id}
-                className="task-card"
-                onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-8px) scale(1.02)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0px) scale(1)"}
-              >
-  
-                {/* ✏️ Title / Edit */}
-                {editingId === task.id ? (
-                  <input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        updateTaskTitle(task.id, editText);
-                        setEditingId(null);
-                      }
-                    }}
-                    autoFocus
-                    className="edit-input"
-                  />
-                ) : (
-                  <h3 className={`task-title ${task.completed ? "completed-title completed-animate" : ""}`}>
-                    {task.title}
-                  </h3>
-                )}
-  
-                {/* ✅ Status */}
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => toggleTask(task.id)}
-                  className="checkbox"
-                />
-  
-                <p style={{
-                  color: task.completed ? "#00ffcc" : "#ff5f5f",
-                  marginBottom: "15px"
-                }}>
-                  {task.completed ? "Completed ✔" : "Pending ✖"}
-                </p>
-  
-                {/* 🔘 Buttons */}
-                <div className="actions">
-  
-                  <button
-                    className="button edit-btn"
-                    onClick={() => {
-                      setEditingId(task.id);
-                      setEditText(task.title);
-                    }}
-                  >
-                    Edit
-                  </button>
-  
-                  <button
-                    className="button delete-btn"
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    Delete
-                  </button>
-  
-                </div>
-  
-              </div>
-            ))}
-        </div>
+        <TaskList
+          tasks={filteredTasks}     // already filtered data
+          onToggle={toggleTask}     // toggle completed state
+          onEdit={openEdit}         // open edit modal
+          onDelete={openDelete}     // 🔥 open delete modal instead of direct delete
+        />
+      )}
+
+      {/* Add Task modal */}
+      {isAddOpen && (
+        <AddModal
+          onClose={closeAdd}
+          onAdd={(title, desc) => addTask(title, desc)}
+        />
+      )}
+
+      {/* Edit Task modal */}
+      {selectedTask && (
+        <EditModal
+          task={selectedTask}
+          onClose={closeEdit}
+          onSave={(title, desc) =>
+            updateTask(selectedTask.id, title, desc)
+          }
+        />
+      )}
+
+      {/* 🔥 Delete Task modal */}
+      {deleteTaskId && (
+        <DeleteModal
+          onClose={closeDelete}
+          onConfirm={() => {
+            deleteTask(deleteTaskId);
+            closeDelete();
+          }}
+        />
       )}
     </div>
-  )};
+  );
+}
 
 export default App;
