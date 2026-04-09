@@ -6,6 +6,7 @@ import TaskList from "./components/TaskList";
 import TopBar from "./components/TopBar";
 import AddModal from "./components/modals/AddModal";
 import EditModal from "./components/modals/EditModal";
+import DeleteModal from "./components/modals/DeleteModal";
 import PageHeader from "./components/PageHeader";
 
 // Custom Hooks (logic separation)
@@ -27,14 +28,17 @@ function App() {
     updateTask,
   } = useTasks();
 
-  // Modal state management (Add + Edit)
+  // Modal state management (Add + Edit + Delete)
   const {
     isAddOpen,
     selectedTask,
+    deleteTaskId,
     openAdd,
     closeAdd,
     openEdit,
     closeEdit,
+    openDelete,
+    closeDelete,
   } = useModals();
 
   // Controlled input for search
@@ -64,26 +68,37 @@ function App() {
           tasks={filteredTasks}     // already filtered data
           onToggle={toggleTask}     // toggle completed state
           onEdit={openEdit}         // open edit modal
-          onDelete={deleteTask}     // delete task
+          onDelete={openDelete}     // 🔥 open delete modal instead of direct delete
         />
       )}
 
-      {/* Add Task modal (only when open) */}
+      {/* Add Task modal */}
       {isAddOpen && (
         <AddModal
-          onClose={closeAdd}                     // close modal
-          onAdd={(title, desc) => addTask(title, desc)} // create task
+          onClose={closeAdd}
+          onAdd={(title, desc) => addTask(title, desc)}
         />
       )}
 
-      {/* Edit Task modal (only when task selected) */}
+      {/* Edit Task modal */}
       {selectedTask && (
         <EditModal
           task={selectedTask}
-          onClose={closeEdit}                  // close modal
+          onClose={closeEdit}
           onSave={(title, desc) =>
-            updateTask(selectedTask.id, title, desc) // update task
+            updateTask(selectedTask.id, title, desc)
           }
+        />
+      )}
+
+      {/* 🔥 Delete Task modal */}
+      {deleteTaskId && (
+        <DeleteModal
+          onClose={closeDelete}
+          onConfirm={() => {
+            deleteTask(deleteTaskId);
+            closeDelete();
+          }}
         />
       )}
     </div>

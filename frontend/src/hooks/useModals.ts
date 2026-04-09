@@ -1,33 +1,42 @@
 import { useState } from "react";
 import type { Task } from "../types/Task";
 
-// Custom hook to manage modal states (Add + Edit)
 export function useModals() {
-
-  // Add modal state
+  // Add modal
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  // Edit modal state (holds selected task)
+  // Edit modal
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Open Add modal
-  const openAdd = () => setIsAddOpen(true);
+  // 🔥 Delete modal
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
-  // Close Add modal
+  // Add handlers
+  const openAdd = () => setIsAddOpen(true);
   const closeAdd = () => setIsAddOpen(false);
 
-  // Open Edit modal with selected task
+  // Edit handlers
   const openEdit = (task: Task) => setSelectedTask(task);
-
-  // Close Edit modal
   const closeEdit = () => setSelectedTask(null);
 
+  // 🔥 Delete handlers
+  const openDelete = (id: number) => setDeleteTaskId(id);
+  const closeDelete = () => setDeleteTaskId(null);
+
   return {
+    // Add
     isAddOpen,
-    selectedTask,
     openAdd,
     closeAdd,
+
+    // Edit
+    selectedTask,
     openEdit,
     closeEdit,
+
+    // 🔥 Delete
+    deleteTaskId,
+    openDelete,
+    closeDelete,
   };
 }
